@@ -17,6 +17,14 @@ const accesos = [
     color: "bg-purple-50",
   },
   {
+    nombre: "Asignaturas",
+    descripcion: "Consulta la información de tus asignaturas de ADE.",
+    icono: "📚",
+    href: "/asignaturas",
+    boton: "Ver asignaturas",
+    color: "bg-indigo-50",
+  },
+  {
     nombre: "Tareas",
     descripcion: "Organiza trabajos, prácticas y entregas.",
     icono: "✅",
