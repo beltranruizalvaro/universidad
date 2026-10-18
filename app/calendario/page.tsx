@@ -59,13 +59,11 @@ function claveEvento(e: Evento) {
 }
 
 export default function Calendario() {
-  const hoy = new Date();
-
+  // Valores iniciales estables para evitar errores durante la compilación.
+  const [hoy, setHoy] = useState(() => new Date(2000, 0, 1));
   const [eventos, setEventos] = useState<Evento[]>([]);
-  const [mes, setMes] = useState(
-    new Date(hoy.getFullYear(), hoy.getMonth(), 1)
-  );
-  const [seleccionada, setSeleccionada] = useState(fechaLocal(hoy));
+  const [mes, setMes] = useState(() => new Date(2000, 0, 1));
+  const [seleccionada, setSeleccionada] = useState("2000-01-01");
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
@@ -73,11 +71,22 @@ export default function Calendario() {
 
   const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState("Examen");
-  const [fecha, setFecha] = useState(fechaLocal(hoy));
+  const [fecha, setFecha] = useState("2000-01-01");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFin, setHoraFin] = useState("");
   const [asignatura, setAsignatura] = useState("");
   const [descripcion, setDescripcion] = useState("");
+
+  // Al abrir la página en el navegador, establecemos la fecha real.
+  useEffect(() => {
+    const ahora = new Date();
+    const fechaHoy = fechaLocal(ahora);
+
+    setHoy(ahora);
+    setMes(new Date(ahora.getFullYear(), ahora.getMonth(), 1));
+    setSeleccionada(fechaHoy);
+    setFecha(fechaHoy);
+  }, []);
 
   const cargarEventos = useCallback(async () => {
     setCargando(true);
@@ -96,12 +105,14 @@ export default function Calendario() {
       return;
     }
 
-    // Oculta copias idénticas sin borrar nada de la base de datos.
+    // Oculta duplicados visualmente, sin borrar datos de Supabase.
     const unicos = new Map<string, Evento>();
 
     for (const evento of (data ?? []) as Evento[]) {
       const clave = claveEvento(evento);
-      if (!unicos.has(clave)) unicos.set(clave, evento);
+      if (!unicos.has(clave)) {
+        unicos.set(clave, evento);
+      }
     }
 
     setEventos(Array.from(unicos.values()));
@@ -154,7 +165,10 @@ export default function Calendario() {
       descripcion: descripcion.trim() || null,
     };
 
-    const candidato: Evento = { ...nuevo, id: editando ?? "nuevo" };
+    const candidato: Evento = {
+      ...nuevo,
+      id: editando ?? "nuevo",
+    };
 
     const repetido = eventos.some(
       (e) =>
@@ -183,6 +197,7 @@ export default function Calendario() {
     }
 
     const eraEdicion = editando !== null;
+
     await cargarEventos();
     limpiarFormulario();
     setSeleccionada(fecha);
@@ -191,7 +206,9 @@ export default function Calendario() {
   }
 
   async function borrarEvento(e: Evento) {
-    if (!window.confirm(`¿Quieres borrar "${e.titulo}"?`)) return;
+    if (!window.confirm(`¿Quieres borrar "${e.titulo}"?`)) {
+      return;
+    }
 
     const { error } = await supabase
       .from("eventos")
@@ -213,18 +230,17 @@ export default function Calendario() {
     0
   ).getDate();
 
-  const huecos = (new Date(
-    mes.getFullYear(),
-    mes.getMonth(),
-    1
-  ).getDay() + 6) % 7;
+  const huecos =
+    (new Date(mes.getFullYear(), mes.getMonth(), 1).getDay() + 6) % 7;
 
   const celdas: (number | null)[] = [
     ...Array(huecos).fill(null),
     ...Array.from({ length: diasMes }, (_, i) => i + 1),
   ];
 
-  while (celdas.length % 7 !== 0) celdas.push(null);
+  while (celdas.length % 7 !== 0) {
+    celdas.push(null);
+  }
 
   const eventosDia = eventos.filter((e) => e.fecha === seleccionada);
 
@@ -344,7 +360,9 @@ export default function Calendario() {
                   setFecha(fechaDia);
                 }}
                 className={`min-w-0 border-b border-r border-gray-100 p-1.5 text-left transition sm:p-2 ${
-                  activo ? "bg-blue-50 ring-2 ring-inset ring-blue-500" : "hover:bg-gray-50"
+                  activo
+                    ? "bg-blue-50 ring-2 ring-inset ring-blue-500"
+                    : "hover:bg-gray-50"
                 }`}
               >
                 <span
@@ -384,9 +402,7 @@ export default function Calendario() {
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.85fr)]">
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:p-6">
-          <h2 className="text-xl font-bold text-gray-900">
-            Eventos del día
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900">Eventos del día</h2>
           <p className="mb-5 mt-1 text-sm capitalize text-gray-500">
             {new Date(`${seleccionada}T12:00:00`).toLocaleDateString("es-ES", {
               weekday: "long",
