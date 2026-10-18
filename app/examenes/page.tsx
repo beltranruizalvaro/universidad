@@ -62,7 +62,7 @@ export default function Examenes() {
 
   const [titulo, setTitulo] = useState("");
   const [asignatura, setAsignatura] = useState("");
-  const [fecha, setFecha] = useState(fechaLocal(new Date()));
+  const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [aula, setAula] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -90,6 +90,7 @@ export default function Examenes() {
   }, []);
 
   useEffect(() => {
+    setFecha(fechaLocal(new Date()));
     void cargarExamenes();
   }, [cargarExamenes]);
 
@@ -149,7 +150,7 @@ export default function Examenes() {
     setDescripcion("");
 
     await cargarExamenes();
-    setMensaje("Examen añadido al calendario y a la lista.");
+    setMensaje("Examen añadido al calendario y a la lista de exámenes.");
     setGuardando(false);
   }
 
